@@ -27,6 +27,9 @@ public class AndroidPNotchScreen implements INotchScreen {
 
     @Override
     public void setDisplayInNotch(Activity activity) {
+        if (activity == null || activity.getWindow() == null) {
+            return;
+        }
         Window window = activity.getWindow();
         // 延伸显示区域到耳朵区
         WindowManager.LayoutParams lp = window.getAttributes();
@@ -39,20 +42,25 @@ public class AndroidPNotchScreen implements INotchScreen {
 
     @Override
     public void getNotchRect(Activity activity, final NotchSizeCallback callback) {
-        final View contentView = activity.getWindow().getDecorView();
-        contentView.post(new Runnable() {
+        if (activity == null || activity.getWindow() == null) {
+            return;
+        }
+        final View decorView = activity.getWindow().getDecorView();
+        decorView.post(new Runnable() {
             @Override
             public void run() {
-                WindowInsets windowInsets = contentView.getRootWindowInsets();
-                if (windowInsets != null) {
-                    DisplayCutout cutout = windowInsets.getDisplayCutout();
-                    if (cutout != null) {
-                        List<Rect> rects = cutout.getBoundingRects();
+                WindowInsets windowInsets = decorView.getRootWindowInsets();
+                DisplayCutout cutout = (windowInsets == null ? null : windowInsets.getDisplayCutout());
+                if (cutout != null) {
+                    List<Rect> rects = cutout.getBoundingRects();
+                    if (callback != null) {
                         callback.onResult(rects);
-                        return;
+                    }
+                } else {
+                    if (callback != null) {
+                        callback.onResult(null);
                     }
                 }
-                callback.onResult(null);
             }
         });
     }
